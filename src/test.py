@@ -1,3 +1,4 @@
+import os
 
 def create_deck() -> np.array:
     'return an array that represents a deck of cards'
