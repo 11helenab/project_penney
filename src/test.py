@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib 
 import random
 import os
+#Emily was here
 
 def create_deck() -> np.array:
     'return an array that represents the black and red cards in a deck of cards'
