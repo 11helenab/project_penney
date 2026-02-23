@@ -65,15 +65,16 @@ def run_simulation(n_decks: int, method: str = "ron"):
 
         for i, seq_a in enumerate(sequences):
             for j, seq_b in enumerate(sequences):
+                deck_copy = deck.copy()
 
                 if method == "ron":
                     score_a, score_b = rons_method(deck, seq_a, seq_b)
                 elif method == "trick":
-                    score_a, score_b = trick_method(deck, seq_a, seq_b)
+                    score_a, score_b = trick_method(deck, seq_a, seq_b, deck_copy)
                 else:
                     raise ValueError("Unknown method.")
 
-                # update results
+                # determine who wins this singular deck
                 if score_a > score_b:
                     results["wins_a"][i, j] += 1
                 elif score_b > score_a:
