@@ -22,7 +22,3 @@ def save_deck(deck: np.array, filename: str) -> None:
         raise FileExistsError(f'File {filename} already exists')
     
     np.save(file_path, deck)
-
-number_decks = int(input("How many decks of cards do you want to run project penney on?"))
-for _ in range(number_decks):
-    print(create_deck())
