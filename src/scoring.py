@@ -3,13 +3,13 @@ import random
 import itertools
 import numpy as np
 
-# bring in deck(s) of cards
-def generate_deck(n_decks):
-    deck = []
-    for _ in range(n_decks):
-        deck += [0]*26 + [1]*26
-    random.shuffle(deck) # should we use a seed?
-    return deck
+PATH_DATA = 'data'
+
+def load_data(filename: str) -> np.ndarray:
+    '''
+    Loads deck data from an .npy file located in the default data directory.
+    '''
+    return np.load(os.path.join(PATH_DATA, filename))
 
 # create all possible sequence combinations
 N_BITS = 3
@@ -19,11 +19,21 @@ choices = [f'{xi:b}'.zfill(3) for xi in range(2**N_BITS)] #0s and 1s
 combinations = list(itertools.product(choices, choices))
 combinations = list(map(list, combinations))
 
-def rons_method(choice_a, choice_b, n_decks):
-    deck = generate_deck(n_decks)
+def trick_method(choice_a, choice_b, n_decks):
+    ''' 
+    placeholder function for the trick method
+    '''
+    return
+
+def rons_method(deck: np.ndarray, choice_a: str, choice_b: str):
+    '''
+    Ron's scoring method:
+    Player's win all upturned cards when their sequence appears
+    '''
+    deck = list(deck)
     upturned = []
-    score_a = 0
-    score_b = 0
+    rscore_a = 0
+    rscore_b = 0
 
     while len(deck) > 0:
         # flip a card
@@ -34,34 +44,36 @@ def rons_method(choice_a, choice_b, n_decks):
         if len(upturned) >= 3:
             last_three = ''.join(str(i) for i in upturned[-3:])
             if last_three == choice_a:
-                score_a += len(upturned)
+                rscore_a += len(upturned)
                 upturned = []
             elif last_three == choice_b:
-                score_b += len(upturned)
+                rscore_b += len(upturned)
                 upturned = []
-    return score_a, score_b
+    return rscore_a, rscore_b
 
 def win_probability(choice_a, choice_b, n_decks, N=5000):
-    wins_a = 0
-    wins_b = 0
-    ties = 0
+    rwins_a = 0
+    rwins_b = 0
+    rties = 0
 
     for _ in range(N):
-        score_a, score_b = rons_method(choice_a, choice_b, n_decks)
+        rscore_a, rscore_b = rons_method(choice_a, choice_b, n_decks)
 
-        if score_a > score_b:
-            wins_a += 1
-        elif score_b > score_a:
-            wins_b += 1
-        else: ties += 1
-        win_a_prob = wins_a/N
-        win_b_prob = wins_b/N
-        ties_prob = ties/N
-    return win_a_prob, win_b_prob, ties_prob
+        if rscore_a > rscore_b:
+            rwins_a += 1
+        elif rscore_b > rscore_a:
+            rwins_b += 1
+        else: rties += 1
+        rwin_a_prob = rwins_a/N
+        rwin_b_prob = rwins_b/N
+        rties_prob = rties/N
+    return rwin_a_prob, rwin_b_prob, rties_prob
 
-def save_scores(win_a_prob: float, win_b_prob: float, 
-                ties_prob: float, filename: str) -> None:
-    'save the win probabilities to an output folder'
+def save_scores(rwin_a_prob: float, rwin_b_prob: float, 
+                rties_prob: float, filename: str) -> None:
+    '''
+    save the win probabilities to an output folder
+    '''
     folder = 'data'
     file_path = os.path.join(folder, str)
 
@@ -71,6 +83,6 @@ def save_scores(win_a_prob: float, win_b_prob: float,
     if os.path.exists(file_path):
         raise FileExistsError(f'File {filename} already exists')
     
-    np.save(file_path, win_a_prob)
-    np.save(file_path, win_b_prob)
-    np.save(file_path, ties_prob)
+    np.save(file_path, rwin_a_prob)
+    np.save(file_path, rwin_b_prob)
+    np.save(file_path, rties_prob)
