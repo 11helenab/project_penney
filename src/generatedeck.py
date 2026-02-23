@@ -13,7 +13,7 @@ def create_deck() -> np.array:
 def save_deck(deck: np.array, filename: str) -> None:
     'save the array to an output folder'
     folder = 'data'
-    file_path = os.path.join(folder, str)
+    file_path = os.path.join(folder, filename)
 
     if not os.path.exists(folder):
         os.mkdir(folder)
