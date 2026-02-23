@@ -1,33 +1,20 @@
 import os
 import numpy as np
-from src.generatedeck import create_deck, save_deck
-from src.scoring import rons_method
+import matplotlib.pyplot as plt
+from src.simulation import run_simulation
 
+FIGURES_PATH = os.path.join("figures")
+os.makedirs(FIGURES_PATH, exist_ok=True)
 
 def main() -> None:
-    print("Ron's Version of the H-N Game")
-    n_decks = int(input("How many decks of cards do you want to run project penney on?"))
+    print("The Humble-Nishiyama Randomness Game Simulation!")
+    method = input("Select scoring method ('ron' or 'trick'):").strip().lower()
+    n_decks = int(input("How many new decks do you want to simulate? "))
 
-    # Generate the decks
-    decks = create_deck(n_decks)
+    results, sequences = run_simulation(n_decks, method)
+    print(f"Simulation complete! Total decks simulated: {results['total_decks']}")
 
-    # Save decks
-    save_deck(decks)
-
-    # Placeholder choices (later all 8 combos will be looped over)
-    choice_a = "010"
-    choice_b = "101"
-
-    # INSERT TRICK SIMULATION
-    # ron's simulation
-    rwins_a, rwins_b, rties = rons_method(decks, choice_a, choice_b)
-
-    print(f"For {n_decks} deck of cards:")
-    print(f"Player 1 wins: {rwins_a}")
-    print(f"Player 2 wins: {rwins_b}")
-    print(f"Ties: {rties}")
     # make_heatmap(data, 'test_heatmap.svg') # uncomment when we have heatmap function
-
 
 if __name__ == "__main__":
     main()
