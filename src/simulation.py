@@ -2,11 +2,11 @@ import numpy as np
 import os
 import itertools
 from src.generatedeck import create_deck
-from src.scoring import rons_method
+from src.scoring import rons_method, trick_method
 
 DATA_PATH = os.path("data")
+os.makedirs(DATA_PATH, exist_ok=True)
 
-# create all possible sequence combinations
 def generate_sequences():
     '''
     Generate all 3-bit sequence combinations as strings.
@@ -58,7 +58,7 @@ def run_simulation(n_decks: int, method: str = "ron"):
     Default is set to "ron"
     '''
     sequences = generate_sequences()
-    results = load_results()
+    results = load_results(method)
 
     for _ in range(n_decks):
         deck = create_deck()
@@ -68,13 +68,12 @@ def run_simulation(n_decks: int, method: str = "ron"):
 
                 if method == "ron":
                     score_a, score_b = rons_method(deck, seq_a, seq_b)
-
-                # elif method == "trick":
-                #     score_a, score_b = trick_method(deck, seq_a, seq_b)
-
+                elif method == "trick":
+                    score_a, score_b = trick_method(deck, seq_a, seq_b)
                 else:
                     raise ValueError("Unknown method.")
 
+                # update results
                 if score_a > score_b:
                     results["wins_a"][i, j] += 1
                 elif score_b > score_a:
@@ -85,5 +84,4 @@ def run_simulation(n_decks: int, method: str = "ron"):
         results["total_decks"] += 1
 
     save_results(results, method)
-
     return results, sequences
