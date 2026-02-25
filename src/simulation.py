@@ -9,7 +9,7 @@ from src.scoring import scoring
 # paths for accessing and saving data
 DATA_PATH = "data"
 RAW_DECK_FILE = os.path.join(DATA_PATH, "all_decks.npy")
-TEST_DECK_FILE = os.path.join(DATA_PATH, "test_deck.npy")
+TEST_DECK_FILE = os.path.join(DATA_PATH, "test_deck2.npy")
 RESULTS_FILE = os.path.join(DATA_PATH, "combined_results.npy")
 CSV_FILE = os.path.join(DATA_PATH, "heatmap_data.csv")
 
@@ -50,7 +50,7 @@ def load_results():
     '''
     if os.path.exists(RESULTS_FILE):
         # access former game results if they exist
-        return np.load(RESULTS_FILE).item()
+        return np.load(RESULTS_FILE, allow_pickle=True).item()
     else:
         return initialize_results()
 
@@ -68,7 +68,7 @@ def save_decks(new_decks):
     new_decks = np.array(new_decks, dtype=np.int8)
 
     if os.path.exists(RAW_DECK_FILE):
-        old_decks = np.load(RAW_DECK_FILE)
+        old_decks = np.load(RAW_DECK_FILE, allow_pickle=True)
         combined = np.vstack((old_decks, new_decks)) # vertically stacks arrays
     else:
         combined = new_decks
