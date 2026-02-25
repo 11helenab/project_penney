@@ -8,10 +8,9 @@ os.makedirs(FIGURES_PATH, exist_ok=True)
 
 def main() -> None:
     print("The Humble-Nishiyama Randomness Game Simulation!")
-    method = input("Select scoring method ('ron' or 'trick'):").strip().lower() # going to change this (it will run both at same time)
     n_decks = int(input("How many new decks do you want to simulate? "))
 
-    results, sequences = run_simulation(n_decks, method)
+    results = run_simulation(n_decks)
     print(f"Simulation complete! Total decks simulated: {results['total_decks']}")
 
     # make_heatmap(data, 'test_heatmap.svg') # uncomment when we have heatmap function

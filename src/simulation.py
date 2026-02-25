@@ -27,7 +27,8 @@ def generate_sequences():
 
     combinations = list(itertools.product(choices, choices))
     combinations = list(map(list, combinations))
-    return combinations
+    print(choices, len(choices))
+    return choices
 
 def initialize_results():
     '''
