@@ -1,11 +1,10 @@
 import numpy as np
 import os
 import itertools
-from src.generatedeck import create_deck
-from src.scoring import rons_method, trick_method
+from src.generatedeck import create_deck, save_deck
+from src.scoring import scoring
 
-DATA_PATH = os.path("data")
-os.makedirs(DATA_PATH, exist_ok=True)
+os.makedirs("data", exist_ok=True)
 
 def generate_sequences():
     '''
@@ -26,10 +25,10 @@ def initialize_result_dict():
     Create a dictionary of 3 8x8 arrays holding the results of all possible combinations.
     '''
     return {
-        "wins_a": np.zeros((8, 8), dtype=int),
-        "wins_b": np.zeros((8, 8), dtype=int),
-        "ties": np.zeros((8, 8), dtype=int),
-        "total_decks": 0
+        "card_wins": np.zeros((8, 8), dtype=int),
+        "card_ties": np.zeros((8, 8), dtype=int),
+        "trick_wins": np.zeros((8, 8), dtype=int),
+        "trick_ties": np.zeros((8, 8), dtype=int)
     }
 
 def load_results(method_name: str):
@@ -37,8 +36,8 @@ def load_results(method_name: str):
     Load previous results if they exist.
     If not, create empty results dictionary.
     '''
-    os.makedirs(DATA_PATH, exist_ok=True)
-    file_path = os.path.join(DATA_PATH, f"{method_name}_results.npy")
+    os.makedirs("data", exist_ok=True)
+    file_path = os.path.join("data", f"{method_name}_results.npy")
 
     if os.path.exists(file_path):
         return np.load(file_path).item()
@@ -49,7 +48,7 @@ def save_results(results: dict, method_name: str):
     """
     Save combined old and new results.
     """
-    file_path = os.path.join(DATA_PATH, f"{method_name}_results.npy")
+    file_path = os.path.join("data", f"{method_name}_results.npy")
     np.save(file_path, results)
 
 def run_simulation(n_decks: int, method: str = "ron"):
@@ -62,6 +61,7 @@ def run_simulation(n_decks: int, method: str = "ron"):
 
     for _ in range(n_decks):
         deck = create_deck()
+        save_deck(deck, 'test_deck')
 
         for i, seq_a in enumerate(sequences):
             for j, seq_b in enumerate(sequences):
@@ -73,6 +73,9 @@ def run_simulation(n_decks: int, method: str = "ron"):
                     score_a, score_b = trick_method(deck, seq_a, seq_b, deck_copy)
                 else:
                     raise ValueError("Unknown method.")
+                
+                # running both methods at the same time
+                cards_a, tricks_a, cards_b, tricks_b = scoring(deck, seq_a, seq_b)
 
                 # determine who wins this singular deck
                 if score_a > score_b:

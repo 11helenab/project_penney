@@ -8,7 +8,7 @@ os.makedirs(FIGURES_PATH, exist_ok=True)
 
 def main() -> None:
     print("The Humble-Nishiyama Randomness Game Simulation!")
-    method = input("Select scoring method ('ron' or 'trick'):").strip().lower()
+    method = input("Select scoring method ('ron' or 'trick'):").strip().lower() # going to change this (it will run both at same time)
     n_decks = int(input("How many new decks do you want to simulate? "))
 
     results, sequences = run_simulation(n_decks, method)
