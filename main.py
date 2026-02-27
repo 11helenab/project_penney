@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from src.simulation import run_simulation
+from src.data_viz import create_heatmap
 
 FIGURES_PATH = os.path.join("figures")
 os.makedirs(FIGURES_PATH, exist_ok=True)
@@ -14,6 +15,8 @@ def main() -> None:
     print(f"Simulation complete! Total decks simulated: {results['total_decks']}")
 
     # make_heatmap(data, 'test_heatmap.svg') # uncomment when we have heatmap function
+    create_heatmap('tricks', results['total_decks'])
+    create_heatmap('cards', results['total_decks'])
 
 if __name__ == "__main__":
     main()
