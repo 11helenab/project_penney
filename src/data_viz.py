@@ -179,6 +179,6 @@ def create_heatmap(scoring: str, deck_count: int) -> None:
 #save_path = figures_dir / f"{cont}.svg"
 
 #fig.savefig(save_path, bbox_inches="tight")
-    fig.savefig(f'heatmaps/{scoring}.svg', bbox_inches='tight')
+    fig.savefig(f'figures/{scoring}.svg', bbox_inches='tight')
     
     return
