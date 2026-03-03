@@ -1,1 +1,1 @@
-We will fill this in later
+Penney's project is the first player selects a sequence of three heads or tails (or black/red cards) and then the second player also selects a sequence of the same length. A coin is flipped, or cards are drawn, until they match either players sequence. 
