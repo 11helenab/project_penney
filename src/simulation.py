@@ -103,7 +103,7 @@ def save_deck_chunks(decks: list, seed: int):
     '''
     Save one chunk of decks to its own file.
     '''
-    filename = os.path.join(DATA_PATH, f"{seed}_deck.npy")
+    filename = os.path.join(DATA_PATH, f"rawdeck_{seed}.npy")
     np.save(filename, np.array(decks, dtype=np.int8)) 
 
 def save_heatmap_csv(results, sequences):
@@ -140,6 +140,78 @@ def save_heatmap_csv(results, sequences):
     df = pd.DataFrame(rows)
     df.to_csv(CSV_FILE, index=False)
 
+
+def deck_gen(n_decks: int):
+    '''
+    Run simulation for both "ron" and "tricks" methods.
+    Update win/tie counts for player 2.
+    Returns:
+        - All decks
+        - Raw results (.npy)
+        - Heatmap CSV data
+    '''
+    new_decks = []
+    remaining = n_decks
+
+    while remaining > 0:
+        seed = get_seed()
+        np.random.seed(seed)
+
+        # if there is less than # max decks left -> pick remaining deck number
+        chunk_size = min(MAX_DECKS, remaining)
+        decks_chunk = []
+
+        for _ in range(chunk_size):
+
+            deck = create_deck()
+            decks_chunk.append(deck)
+
+        # save this chunk of decks
+        save_deck_chunks(decks_chunk, seed)
+
+        # increment seed
+        update_seed(seed + 1)
+
+        remaining -= chunk_size
+
+
+
+def scoring_new(file_path:str)-> list:
+    sequences = generate_sequences()
+    results = load_results()
+
+    data = np.load(file_path)
+
+    for i, seq_a in enumerate(sequences):
+        for j, seq_b in enumerate(sequences):
+            for deck in data:
+                deck_copy = deck.copy()
+                        
+                # running both methods at the same time
+                cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b)
+
+                # Ron's method
+                if cards_b > cards_a:
+                    results["card_wins_p2"][i, j] += 1
+                elif cards_b == cards_a:
+                    results["card_ties"][i, j] += 1
+                        
+                # Trick method
+                    if tricks_b > tricks_a:
+                        results["trick_wins_p2"][i, j] += 1
+                    elif tricks_b == tricks_a:
+                        results["trick_ties"][i, j] += 1
+
+                results["total_decks"] += 1
+                #END OF FOR LOOP
+    
+    # save combined results
+    save_results(results)
+
+    # save CSV for heatmaps
+    save_heatmap_csv(results, sequences)
+
+    return results
 
 def run_simulation(n_decks: int):
     '''
