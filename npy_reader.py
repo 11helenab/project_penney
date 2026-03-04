@@ -1,7 +1,10 @@
 import numpy as np
 
-data = np.load(r'data\call_decks.npy', allow_pickle=True)
-print(data)
+data= np.load('data/rawdeck_0.npy')
 
-data = np.load(r'data\combined_results.npy', allow_pickle=True)
-print(data)
+count = 0
+
+for i in data: 
+    print(i)
+    print(count)
+    count += 1

@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.simulation import run_simulation, load_results
 from src.data_viz import create_heatmap
+from src.simulation import deck_gen, scoring_new
 
 FIGURES_PATH = os.path.join("figures")
 os.makedirs(FIGURES_PATH, exist_ok=True)
@@ -28,16 +29,25 @@ def main() -> None:
         print("Cannot generate a negative number of decks.")
         exit()
 
-    print("\nYou are going to:")
-    print(f"Generate {n_decks:,} new decks, update all win/tie totals, and regenerate heatmaps and CSV data")
+    print(f'\nYou are going to generate {n_decks}:')
+    #print(f"Generate {n_decks:,} new decks, update all win/tie totals, and regenerate heatmaps and CSV data")
 
     confirm = input("Would you like to proceed? (y/n): ").lower()
 
     if confirm != "y":
         print("Simulation Cancelled")
         exit()
+    
+    deck_gen(n_decks)
 
-    results = run_simulation(n_decks)
+    print(f'would you like to score the decks?')
+    confirm = input("Would you like to proceed? (y/n): ").lower()
+
+    if confirm != "y":
+        print("Simulation Cancelled")
+        exit()
+
+    results = scoring_new('/Users/emilyrosenthal/Desktop/GitHub/project_penney/data/rawdeck_1.npy')
     print(f"Simulation complete! Total decks simulated: {results['total_decks']:,}")
 
     create_heatmap('tricks', results['total_decks'])
