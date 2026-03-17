@@ -206,12 +206,13 @@ def scoring_new()-> list:
                         results["card_ties"][i, j] += 1
                             
                     # Trick method
-                        if tricks_b > tricks_a:
-                            results["trick_wins_p2"][i, j] += 1
-                        elif tricks_b == tricks_a:
-                            results["trick_ties"][i, j] += 1
+                    if tricks_b > tricks_a:
+                        results["trick_wins_p2"][i, j] += 1
+                    elif tricks_b == tricks_a:
+                        results["trick_ties"][i, j] += 1
 
-                    results["total_decks"] += 1
+        for deck in data:
+            results["total_decks"] += 1
                     #END OF FOR LOOP
 
         #move the file to the scored folder
