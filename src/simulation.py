@@ -2,15 +2,18 @@ import numpy as np
 import os
 import itertools
 import pandas as pd
+import shutil
 
 from src.generatedeck import create_deck, save_deck
 from src.scoring import scoring
 
 # paths for accessing and saving data
+DATA_PATH_SCORED = "data/scored"
+DATA_PATH_UNSCORED = "data/unscored"
 DATA_PATH = "data"
 PATH_SEED = os.path.join(DATA_PATH, 'next_seed.txt')
-RAW_DECK_FILE = os.path.join(DATA_PATH, "all_decks.npy")
-TEST_DECK_FILE = os.path.join(DATA_PATH, "test_deck2.npy")
+#RAW_DECK_FILE = os.path.join(DATA_PATH, "all_decks.npy")
+#TEST_DECK_FILE = os.path.join(DATA_PATH, "test_deck2.npy")
 RESULTS_FILE = os.path.join(DATA_PATH, "combined_results.npy")
 CSV_FILE = os.path.join(DATA_PATH, "heatmap_data.csv")
 
@@ -85,6 +88,7 @@ def save_results(results: dict):
     np.save(RESULTS_FILE, results)
 
 def save_decks(new_decks):
+    #THIS CAN BE DELETED EVENTUALLY
     '''
     Append new decks to existing all_decks.npy.
     Store decks at int8 for size safety - ask Ron about this.
@@ -103,7 +107,7 @@ def save_deck_chunks(decks: list, seed: int):
     '''
     Save one chunk of decks to its own file.
     '''
-    filename = os.path.join(DATA_PATH, f"rawdeck_{seed}.npy")
+    filename = os.path.join(DATA_PATH_UNSCORED, f"rawdeck_{seed}.npy")
     np.save(filename, np.array(decks, dtype=np.int8)) 
 
 def save_heatmap_csv(results, sequences):
@@ -176,34 +180,43 @@ def deck_gen(n_decks: int):
 
 
 
-def scoring_new(file_path:str)-> list:
+def scoring_new()-> list:
     sequences = generate_sequences()
     results = load_results()
 
-    data = np.load(file_path)
+    #this function needs to read in everything from the unscored folder, score it and move it to the scored folder
 
-    for i, seq_a in enumerate(sequences):
-        for j, seq_b in enumerate(sequences):
-            for deck in data:
-                deck_copy = deck.copy()
-                        
-                # running both methods at the same time
-                cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b)
+    for filename in os.listdir(DATA_PATH_UNSCORED):
+        file_path = os.path.join(DATA_PATH_UNSCORED, filename)
+    
+        data = np.load(file_path)
 
-                # Ron's method
-                if cards_b > cards_a:
-                    results["card_wins_p2"][i, j] += 1
-                elif cards_b == cards_a:
-                    results["card_ties"][i, j] += 1
-                        
-                # Trick method
-                    if tricks_b > tricks_a:
-                        results["trick_wins_p2"][i, j] += 1
-                    elif tricks_b == tricks_a:
-                        results["trick_ties"][i, j] += 1
+        for i, seq_a in enumerate(sequences):
+            for j, seq_b in enumerate(sequences):
+                for deck in data:
+                    deck_copy = deck.copy()
+                            
+                    # running both methods at the same time
+                    cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b)
 
-                results["total_decks"] += 1
-                #END OF FOR LOOP
+                    # Ron's method
+                    if cards_b > cards_a:
+                        results["card_wins_p2"][i, j] += 1
+                    elif cards_b == cards_a:
+                        results["card_ties"][i, j] += 1
+                            
+                    # Trick method
+                        if tricks_b > tricks_a:
+                            results["trick_wins_p2"][i, j] += 1
+                        elif tricks_b == tricks_a:
+                            results["trick_ties"][i, j] += 1
+
+                    results["total_decks"] += 1
+                    #END OF FOR LOOP
+
+        #move the file to the scored folder
+        new_path = f'{DATA_PATH_SCORED}/{filename}'
+        shutil.move(file_path, new_path)
     
     # save combined results
     save_results(results)
@@ -214,6 +227,7 @@ def scoring_new(file_path:str)-> list:
     return results
 
 def run_simulation(n_decks: int):
+    #CAN DELETE THIS EVENTUALLY
     '''
     Run simulation for both "ron" and "tricks" methods.
     Update win/tie counts for player 2.

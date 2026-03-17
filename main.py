@@ -47,7 +47,7 @@ def main() -> None:
         print("Simulation Cancelled")
         exit()
 
-    results = scoring_new('/Users/emilyrosenthal/Desktop/GitHub/project_penney/data/rawdeck_1.npy')
+    results = scoring_new()
     print(f"Simulation complete! Total decks simulated: {results['total_decks']:,}")
 
     create_heatmap('tricks', results['total_decks'])
