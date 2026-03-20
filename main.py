@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from src.simulation import run_simulation, load_results
+from src.simulation import load_results
 from src.data_viz import create_heatmap
 from src.simulation import deck_gen, scoring_new
 
