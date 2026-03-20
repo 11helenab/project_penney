@@ -11,11 +11,11 @@ FIGURES_PATH = os.path.join("figures")
 os.makedirs(FIGURES_PATH, exist_ok=True)
 
 def main() -> None:
-    """
+    '''
     Main function that accesses src functions to run the simulation, 
     generate decks, scores decks, and creates figure.
     Returns: None
-    """
+    '''
     print("The Humble-Nishiyama Randomness Game Simulation!")
 
     # load previous results (old runs)
