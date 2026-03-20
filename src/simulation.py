@@ -159,7 +159,7 @@ def deck_gen(n_decks: int) -> None:
 
         for _ in range(chunk_size): # Increments through numbers 0-999 (or less if fewer decks left)
 
-            deck = create_deck() # create current deck number
+            deck = create_deck() # access create_deck function from src.generatedeck
             decks_chunk.append(deck) # append deck to the current chunk of decks
 
         # save this chunk of decks using current seed as file name
