@@ -4,7 +4,7 @@ import itertools
 import pandas as pd
 import shutil
 
-from src.generatedeck import create_deck, save_deck
+from src.generatedeck import create_deck
 from src.scoring import scoring
 
 # paths for accessing and saving data
@@ -86,22 +86,6 @@ def save_results(results: dict):
     Save combined old and new results.
     """
     np.save(RESULTS_FILE, results)
-
-def save_decks(new_decks):
-    #THIS CAN BE DELETED EVENTUALLY
-    '''
-    Append new decks to existing all_decks.npy.
-    Store decks at int8 for size safety - ask Ron about this.
-    '''
-    new_decks = np.array(new_decks, dtype=np.int8)
-
-    if os.path.exists(RAW_DECK_FILE):
-        old_decks = np.load(RAW_DECK_FILE, allow_pickle=True)
-        combined = np.vstack((old_decks, new_decks)) # vertically stacks arrays
-    else:
-        combined = new_decks
-    
-    np.save(RAW_DECK_FILE, combined)
 
 def save_deck_chunks(decks: list, seed: int):
     '''
