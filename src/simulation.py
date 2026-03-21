@@ -1,67 +1,70 @@
+# import statements
 import numpy as np
 import os
 import itertools
 import pandas as pd
 import shutil
 
-from src.generatedeck import create_deck, save_deck
+# import functions from other .py files in src folder
+from src.generatedeck import create_deck
 from src.scoring import scoring
 
 # paths for accessing and saving data
-DATA_PATH_SCORED = "data/scored"
-DATA_PATH_UNSCORED = "data/unscored"
-DATA_PATH = "data"
-PATH_SEED = os.path.join(DATA_PATH, 'next_seed.txt')
-#RAW_DECK_FILE = os.path.join(DATA_PATH, "all_decks.npy")
-#TEST_DECK_FILE = os.path.join(DATA_PATH, "test_deck2.npy")
-RESULTS_FILE = os.path.join(DATA_PATH, "combined_results.npy")
-CSV_FILE = os.path.join(DATA_PATH, "heatmap_data.csv")
+DATA_PATH_SCORED = "data/scored" # scored folder
+DATA_PATH_UNSCORED = "data/unscored" # unscored folder
+DATA_PATH = "data" # data folder
+PATH_SEED = os.path.join(DATA_PATH, 'next_seed.txt') # seed number .txt file
+RESULTS_FILE = os.path.join(DATA_PATH, "combined_results.npy") # results .npy file
+CSV_FILE = os.path.join(DATA_PATH, "heatmap_data.csv") # same as results file but in .csv format for heatmaps
 
-# max decks per file
+# max decks per file (chunk size)
 MAX_DECKS = 1000
 
+# make data directory if it doesn't exist
 os.makedirs("data", exist_ok=True)
 
 def get_seed() -> int:
-    '''
+    """
     Return the number stored in PATH_SEED.
-    This is the next seed to be used in
-    random array generation.
-    '''
-    if os.path.exists(PATH_SEED):
-        with open(PATH_SEED, 'r', encoding='utf-8') as f:
-            seed = int(f.read().split()[0])
+    This is the next seed to be used in random array generation.
+    """
+    if os.path.exists(PATH_SEED): # check if file exists
+        with open(PATH_SEED, 'r', encoding='utf-8') as f: # open in read-only mode
+            seed = int(f.read().split()[0]) # splits and extracts first token then converts it to an int
     else:
-        seed = 0
+        seed = 0 # if file empty, seed is 0
     return seed
 
 def update_seed(new_seed: int) -> None:
-    '''
+    """
     Update the number stored in PATH_SEED to new_seed.
-    '''
+    Inputs:
+        - next seed number (old seed + 1)
+    Returns:
+        - None
+    """
     with open(PATH_SEED, 'w', encoding='utf-8') as f:
         f.write(str(new_seed))
     return None
 
-def generate_sequences():
+def generate_sequences() -> list:
     '''
-    Generate all 3-bit sequence combinations as strings.
+    Generate all 3-bit sequence combinations of cards as strings.
     Returns:
-        List of 8 sequences (ex: ['000',...,'111'])
+        - List of 8 sequences (ex: ['000',...,'111'])
     '''
-    N_BITS = 3
-    x = list(range(2**3)) #all 3 card combinations of 2 choices (8)
-    choices = [f'{xi:b}'.zfill(3) for xi in range(2**N_BITS)] #0s and 1s 
+    N_BITS = 3 # define length of binary string
+    choices = [f'{xi:b}'.zfill(3) for xi in range(2**N_BITS)] # convert int into binary string
+                                                              # and pad string with leading zeros
+                                                              # to always be 3 characters long
+    return choices # return list of 8 (2**3) choices of three-card sequences
 
-    combinations = list(itertools.product(choices, choices))
-    combinations = list(map(list, combinations))
-    return choices
-
-def initialize_results():
-    '''
+def initialize_results() -> dict:
+    """
     Stores win/tie counts for Player 2.
     Probability of wins/ties will be calculated later in the heatmap scripts.
-    '''
+    """
+    # initialize an 8x8 array for each win/tie variable and save total_deck number
     return {
         "card_wins_p2": np.zeros((8, 8), dtype=int),
         "card_ties": np.zeros((8, 8), dtype=int),
@@ -70,66 +73,56 @@ def initialize_results():
         "total_decks": 0
     }
 
-def load_results():
-    '''
+def load_results() -> dict:
+    """
     Load previous results if they exist.
     If not, create empty results dictionary.
-    '''
+    """
     if os.path.exists(RESULTS_FILE):
         # access former game results if they exist
         return np.load(RESULTS_FILE, allow_pickle=True).item()
     else:
         return initialize_results()
 
-def save_results(results: dict):
+def save_results(results: dict) -> None:
     """
     Save combined old and new results.
     """
-    np.save(RESULTS_FILE, results)
+    np.save(RESULTS_FILE, results) # appends results to RESULTS_FILE
 
-def save_decks(new_decks):
-    #THIS CAN BE DELETED EVENTUALLY
-    '''
-    Append new decks to existing all_decks.npy.
-    Store decks at int8 for size safety - ask Ron about this.
-    '''
-    new_decks = np.array(new_decks, dtype=np.int8)
-
-    if os.path.exists(RAW_DECK_FILE):
-        old_decks = np.load(RAW_DECK_FILE, allow_pickle=True)
-        combined = np.vstack((old_decks, new_decks)) # vertically stacks arrays
-    else:
-        combined = new_decks
-    
-    np.save(RAW_DECK_FILE, combined)
-
-def save_deck_chunks(decks: list, seed: int):
-    '''
-    Save one chunk of decks to its own file.
-    '''
+def save_deck_chunks(decks: list, seed: int) -> None:
+    """
+    Save one chunk of 1,000 decks to its own file.
+    """
+    # unique file names generated using seed number
     filename = os.path.join(DATA_PATH_UNSCORED, f"rawdeck_{seed}.npy")
+    # save decks as arrays
     np.save(filename, np.array(decks, dtype=np.int8)) 
 
-def save_heatmap_csv(results, sequences):
-    '''
+def save_heatmap_csv(results: dict, sequences: list) -> None:
+    """
     Saves win data in a CSV containing:
         - seq_a and seq_b
         - card_wins_p2 and card_ties_p2
         - trick_wins_p2 and trick_ties_p2
-    '''
+    """
 
-    rows = []
-    total = results["total_decks"]
+    rows = [] # initialize list
 
+    # set i as index and seq_a as the current val of P1's choice
     for i, seq_a in enumerate(sequences):
+        # set j as index and seq_b as the current val of P2's choice (user)
         for j, seq_b in enumerate(sequences):
 
+            # wins and ties from perspective of P2, 
+            # save in respective spot in results based on index
             card_wins = results["card_wins_p2"][i, j]
             card_ties = results["card_ties"][i, j]
 
             trick_wins = results["trick_wins_p2"][i, j]
             trick_ties = results["trick_ties"][i, j]
 
+            # append current sequence of P1 and P2 and P2 wins/ties to list rows
             rows.append({
                 "seq_a": seq_a,
                 "seq_b": seq_b,
@@ -141,151 +134,91 @@ def save_heatmap_csv(results, sequences):
                 "trick_ties_p2": trick_ties
             })
 
+    # convert list rows into dataframe
     df = pd.DataFrame(rows)
+    # convert dataframe to csv file for easier heatmap plotting
     df.to_csv(CSV_FILE, index=False)
 
 
-def deck_gen(n_decks: int):
-    '''
-    Run simulation for both "ron" and "tricks" methods.
-    Update win/tie counts for player 2.
-    Returns:
-        - All decks
-        - Raw results (.npy)
-        - Heatmap CSV data
-    '''
-    new_decks = []
+def deck_gen(n_decks: int) -> None:
+    """
+    Generate and save chunks of decks based on user-inputted integer.
+    Increment the seed by 1 for every chunk of 1,000 decks saved.
+    """
+    # number of decks left to generate
     remaining = n_decks
 
-    while remaining > 0:
-        seed = get_seed()
-        np.random.seed(seed)
+    while remaining > 0: # if there are more decks to generate
+        seed = get_seed() # get the current seed number
+        np.random.seed(seed) # set seed to that seed number
 
-        # if there is less than # max decks left -> pick remaining deck number
-        chunk_size = min(MAX_DECKS, remaining)
-        decks_chunk = []
+        # chunk_size is 1,000 unless there is <1,000 decks remaining, 
+        # then save chunk as number of remaining decks
+        chunk_size = min(MAX_DECKS, remaining) # picks smaller number
+        decks_chunk = [] # initialize empty list
 
-        for _ in range(chunk_size):
+        for _ in range(chunk_size): # Increments through numbers 0-999 (or less if fewer decks left)
 
-            deck = create_deck()
-            decks_chunk.append(deck)
+            deck = create_deck() # access create_deck function from src.generatedeck
+            decks_chunk.append(deck) # append deck to the current chunk of decks
 
-        # save this chunk of decks
+        # save this chunk of decks using current seed as file name
         save_deck_chunks(decks_chunk, seed)
 
-        # increment seed
+        # increment seed by 1
         update_seed(seed + 1)
 
+        # subtract the most recent number of decks created (chunk_size) from number of decks left to create
         remaining -= chunk_size
 
+def scoring_new() -> dict:
+    """
+    Score all unscored deck files by iterating through and evaluating every sequence matchup.
+        - Loads unscored deck chunks
+        - Computes card and trick results for all sequence pairs
+        - Updates total results and moves files to scored directory
+        - Saves results dictionary and heatmap CSV
+    Returns:
+        dict: Updated results dictionary
+    """
+    sequences = generate_sequences() # run generating sequences function
+    results = load_results() # run load_results function
 
-
-def scoring_new()-> list:
-    sequences = generate_sequences()
-    results = load_results()
-
-    #this function needs to read in everything from the unscored folder, score it and move it to the scored folder
-
-    for filename in os.listdir(DATA_PATH_UNSCORED):
-        file_path = os.path.join(DATA_PATH_UNSCORED, filename)
+    for filename in os.listdir(DATA_PATH_UNSCORED): # accessed unscored decks
+        file_path = os.path.join(DATA_PATH_UNSCORED, filename) # file name is the path of the unscored folder + current file name
     
-        data = np.load(file_path)
+        data = np.load(file_path) # load in unscored decks from a file
 
+        # set i as index and seq_a as the current val of P1's choice
         for i, seq_a in enumerate(sequences):
+            # set j as index and seq_b as the current val of P2's choice
             for j, seq_b in enumerate(sequences):
-                for deck in data:
-                    deck_copy = deck.copy()
+                for deck in data: # define deck as one of the arrays in the chunk 
+                    deck_copy = deck.copy() # create a copy of the deck
                             
                     # running both methods at the same time
-                    cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b)
+                    cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b) # access scoring function from src.scoring
 
-                    # Ron's method
-                    if cards_b > cards_a:
-                        results["card_wins_p2"][i, j] += 1
-                    elif cards_b == cards_a:
-                        results["card_ties"][i, j] += 1
+                    # Ron's method: score by number of cards won
+                    # (we do not care about P1 results)
+                    if cards_b > cards_a: # if P2 has more cards than P1 after the deck has been played
+                        results["card_wins_p2"][i, j] += 1 # add 1 to P2's number of card wins
+                    elif cards_b == cards_a: # if P2 and P1 have the same number of cards after deck has been played
+                        results["card_ties"][i, j] += 1 # add 1 to number of card ties
                             
-                    # Trick method
-                    if tricks_b > tricks_a:
-                        results["trick_wins_p2"][i, j] += 1
-                    elif tricks_b == tricks_a:
-                        results["trick_ties"][i, j] += 1
+                    # Trick method: score by number of tricks won
+                    if tricks_b > tricks_a: # if P2 has more tricks won than P1 after the deck has been played
+                        results["trick_wins_p2"][i, j] += 1 # add 1 to P2's number of trick wins
+                    elif tricks_b == tricks_a: # if P2 and P1 have the same number of tricks won after deck has been played
+                        results["trick_ties"][i, j] += 1 # add 1 to number of trick ties
 
-        for deck in data:
+        # for each deck scored, add 1 to the count of number of decks
+        for deck in data: 
             results["total_decks"] += 1
-                    #END OF FOR LOOP
 
-        #move the file to the scored folder
-        new_path = f'{DATA_PATH_SCORED}/{filename}'
-        shutil.move(file_path, new_path)
-    
-    # save combined results
-    save_results(results)
-
-    # save CSV for heatmaps
-    save_heatmap_csv(results, sequences)
-
-    return results
-
-def run_simulation(n_decks: int):
-    #CAN DELETE THIS EVENTUALLY
-    '''
-    Run simulation for both "ron" and "tricks" methods.
-    Update win/tie counts for player 2.
-    Returns:
-        - All decks
-        - Raw results (.npy)
-        - Heatmap CSV data
-    '''
-
-    sequences = generate_sequences()
-    results = load_results()
-
-    new_decks = []
-    remaining = n_decks
-
-    while remaining > 0:
-        seed = get_seed()
-        np.random.seed(seed)
-
-        # if there is less than # max decks left -> pick remaining deck number
-        chunk_size = min(MAX_DECKS, remaining)
-        decks_chunk = []
-
-        for _ in range(chunk_size):
-
-            deck = create_deck()
-            decks_chunk.append(deck)
-
-            for i, seq_a in enumerate(sequences):
-                for j, seq_b in enumerate(sequences):
-                    deck_copy = deck.copy()
-                    
-                    # running both methods at the same time
-                    cards_a, tricks_a, cards_b, tricks_b = scoring(deck_copy, seq_a, seq_b)
-
-                    # Ron's method
-                    if cards_b > cards_a:
-                        results["card_wins_p2"][i, j] += 1
-                    elif cards_b == cards_a:
-                        results["card_ties"][i, j] += 1
-                    
-                    # Trick method
-                    if tricks_b > tricks_a:
-                        results["trick_wins_p2"][i, j] += 1
-                    elif tricks_b == tricks_a:
-                        results["trick_ties"][i, j] += 1
-
-            results["total_decks"] += 1
-            #END OF FOR LOOP
-
-        # save this chunk of decks
-        save_deck_chunks(decks_chunk, seed)
-
-        # increment seed
-        update_seed(seed + 1)
-
-        remaining -= chunk_size
+        # move the file from the unscored folder to the scored folder
+        new_path = f'{DATA_PATH_SCORED}/{filename}' # define new scored folder path
+        shutil.move(file_path, new_path) # moves file to new scored folder path
     
     # save combined results
     save_results(results)
